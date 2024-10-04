@@ -3,22 +3,24 @@ import PinInput from "react-pin-input";
 import { Link } from "react-router-dom"; // Import Link
 import { decryptString } from "../utils/Encryption";
 import { getCloudStorageData } from "../utils/TelegramCloud";
+import { postLogin } from "../utils/api";
 
-const PinLock = ({ setPinEntered }) => {
+const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
   const [errorMessage, setErrorMessage] = useState(""); // State to hold error message
  
-
   const handlePinComplete = async(value) => {
+    setUserAddressPresent(false);
     const encryptPin = await getCloudStorageData('encrypted');
-    console.log("encrytpin",encryptPin);
       const pin = decryptString(encryptPin);
-      console.log("pin",pin);
       if(pin===value){
         setPinEntered(true);
         sessionStorage.setItem("pinEntered", value ? "true" : "false");
         setErrorMessage("");
-      const datafromtele = await getCloudStorageData("userData");
-      console.log("datafromTele",datafromtele);
+        const storedUserAddressPresent = await getCloudStorageData('userData');
+        const dataObj = await postLogin(storedUserAddressPresent?.originalWalletAddress)
+        console.log("dataObj",dataObj?.data);
+        sessionStorage.setItem("dataObj", JSON.stringify(dataObj?.data));
+        setUserAddressPresent(true);
       }
     
   };

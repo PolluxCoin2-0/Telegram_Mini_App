@@ -9,30 +9,20 @@ import GeneratePin from "./pages/GeneratePin";
 import { persistor, store } from "./redux/store";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   const [pinEntered, setPinEntered] = useState(false);
-
-  // const getStoredData = async() => {
-  //   if (window.Telegram?.WebApp) {
-  //     await window.Telegram.WebApp.CloudStorage.getItem('userSettings',(value, value2)=>{
-  //       const parsedData = JSON.parse(value2);
-  //     console.log("parseddata", parsedData)
-  //    });
-  //   }
-  // };
-
-  // useEffect(()=>{
-  //   getStoredData();
-  // },[])
-
+  const [userAddressPresent, setUserAddressPresent] = useState(false);
     // Check sessionStorage to persist the state on page refresh
     useEffect(() => {
       const storedPinEntered = sessionStorage.getItem("pinEntered");
+    
       if (storedPinEntered === "true") {
         setPinEntered(true);
       }
-    }, []);
+    }, [userAddressPresent]);
 
   return (
     <Provider store={store}>
@@ -40,18 +30,26 @@ const App = () => {
         <Router>
           {pinEntered ? (
             <>
-              <Navbar />
+              <Navbar userAddressPresent={userAddressPresent} />
+              <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="dark"
+          newestOnTop={true}
+          pauseOnFocusLoss
+          toastClassName="custom-toast"
+        />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/buyCoin" element={<ComingSoon />} />
-                <Route path="/wallet" element={<ConnectWallet />} />
+                <Route path="/wallet" element={<ConnectWallet setUserAddressPresent={setUserAddressPresent} />} />
               </Routes>
             </>
           ) : (
             <Routes>
               <Route
                 path="/"
-                element={<PinLock setPinEntered={setPinEntered} />}
+                element={<PinLock setPinEntered={setPinEntered} setUserAddressPresent={setUserAddressPresent} />}
               />
               <Route path="/generatepin" element={<GeneratePin />} />
             </Routes>

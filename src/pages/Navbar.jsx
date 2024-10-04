@@ -1,12 +1,25 @@
 import { Link } from "react-router-dom";
 import UvitokenLogo from "../assets/UvitokenLogo.png";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { getCloudStorageData } from "../utils/TelegramCloud";
 
-const Navbar = () => {
-  const userAddressFromState = useSelector((state)=>state?.wallet?.userAddress);
+const Navbar = ({userAddressPresent}) => {
+  console.log("navbar", userAddressPresent)
+  const [userAddressFromState, setUserAddressFromState] = useState(() => {
+    return sessionStorage.getItem('userAddress') || ""; // Set default value from sessionStorage
+  });
   
+  useEffect(()=>{
+    const fetchData = async()=>{
+      const storedUserAddressPresent = await getCloudStorageData('userData');
+      setUserAddressFromState(storedUserAddressPresent?.originalWalletAddress);
+    }
+    fetchData();
+  },[userAddressPresent])
+
   return (
     <div className="navbar bg-gray-900 shadow-lg px-2 md:px-4 py-4 flex flex-row items-center justify-between">
+      <Link to="/">
       <div className="flex items-center">
         <img
           src={UvitokenLogo}
@@ -18,6 +31,7 @@ const Navbar = () => {
           UVI TOKEN
         </span>
       </div>
+      </Link>
       <div className="flex-none">
         <Link
           to="/wallet"

@@ -21,7 +21,6 @@ export const getCloudStorageData = async (key) => {
           try {
             // Parse the returned value
             const parsedData = JSON.parse(value2);
-            console.log("Parsed data:", parsedData);
             resolve(parsedData); // Resolve the promise with parsed data
           } catch (error) {
             console.error("Error parsing data:", error);
