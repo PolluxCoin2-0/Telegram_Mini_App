@@ -4,10 +4,22 @@ import { useEffect, useState } from "react";
 import { getCloudStorageData } from "../utils/TelegramCloud";
 
 const Navbar = ({userAddressPresent}) => {
+  const dummyWalletAddress = [
+    "0x0000000000000000000000000000000000000000",
+    "0x0000000000000000000000000000000000000001",
+    "0x0000000000000000000000000000000000000002",
+    "0x0000000000000000000000000000000000000003",
+  ]
   console.log("navbar", userAddressPresent)
   const [userAddressFromState, setUserAddressFromState] = useState(() => {
     return sessionStorage.getItem('userAddress') || ""; // Set default value from sessionStorage
   });
+
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleWalletClick = () => {
+    setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility
+  };
   
   useEffect(()=>{
     const fetchData = async()=>{
@@ -34,7 +46,8 @@ const Navbar = ({userAddressPresent}) => {
       </Link>
       <div className="flex-none">
         <Link
-          to="/wallet"
+         onClick={handleWalletClick}
+          // to="/wallet"
           className="relative p-0.5 inline-flex items-center justify-center font-bold overflow-hidden group rounded-md"
         >
           <span
@@ -46,11 +59,34 @@ const Navbar = ({userAddressPresent}) => {
             className="relative px-2 py-1 md:px-6 md:py-3 transition-all ease-out bg-gray-900 rounded-md 
             group-hover:bg-opacity-0 duration-400"
           >
-            <span className="relative text-white group-hover:text-black transition duration-300 text-sm md:text-base">
-             {userAddressFromState? userAddressFromState:" Connect Wallet"}
+             {/* {userAddressFromState? userAddressFromState:" Connect Wallet"} */}
+             <span className="relative text-white group-hover:text-black transition duration-300 text-sm md:text-base">
+              {userAddressFromState
+              ? `${userAddressFromState.slice(0,11)}...${userAddressFromState.slice(-6)}  `
+                : "Connect Wallet"}
             </span>
           </span>
         </Link>
+
+         {/* Dropdown list */}
+         {isDropdownOpen && (
+          <div className="absolute top-14 mt-2 right-0 bg-gray-800 border border-gray-600 rounded-md shadow-lg w-48">
+            <ul className="text-white text-sm md:text-base">
+              {dummyWalletAddress.map((address, index) => (
+                <li
+                  key={index}
+                  className="px-4 py-2 hover:bg-gray-700 cursor-pointer"
+                  onClick={() => {
+                    setUserAddressFromState(address);
+                    setIsDropdownOpen(false); // Close dropdown after selection
+                  }}
+                >
+                  {address.slice(0, 8)}...{address.slice(-10)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

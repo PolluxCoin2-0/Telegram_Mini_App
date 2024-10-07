@@ -92,6 +92,7 @@ const ConnectWallet = ({ setUserAddressPresent }) => {
     const encryptPin = await getCloudStorageData("encrypted");
     if (encryptPin) {
       const account = await PolluxWeb.createAccount();
+      console.log(account);
       sessionStorage.setItem("userAddress", account.address.base58);
 
       const pin = decryptString(encryptPin);
