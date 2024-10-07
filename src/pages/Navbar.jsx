@@ -47,7 +47,7 @@ const Navbar = ({userAddressPresent}) => {
       <div className="flex-none">
         <Link
          onClick={handleWalletClick}
-          // to="/wallet"
+          to="/wallet"
           className="relative p-0.5 inline-flex items-center justify-center font-bold overflow-hidden group rounded-md"
         >
           <span

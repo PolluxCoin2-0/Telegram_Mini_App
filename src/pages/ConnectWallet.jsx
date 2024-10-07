@@ -14,6 +14,7 @@ const PolluxWeb = new polluxWeb({
 });
 
 //Registered Modal
+
 const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
   const [OpenRegister, setOpenRegister] = useState(""); // Yes or No state
   const [modalOpen, setModalOpen] = useState(false);
@@ -44,6 +45,12 @@ const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
     setUserAddressPresent(true);
   };
 
+  // Function to handle closing the modal and navigating back
+  const handleCloseModal = () => {
+    setModalOpen(false); // Close the modal
+    navigate(0); // Navigate back to the Import Wallet page
+  };
+
   return (
     <div
       className={`fixed inset-0 p-2 flex items-center justify-center bg-black bg-opacity-50 z-50 transition-opacity duration-300 ${
@@ -55,7 +62,10 @@ const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
           isRegisterOpen ? "scale-100" : "scale-95"
         }`}
       >
-        <p className="flex flex-row justify-end -mt-4 -mr-4 pb-1">
+        <p
+          className="flex flex-row justify-end -mt-4 -mr-4 pb-1 cursor-pointer"
+          onClick={handleCloseModal} // Add the click handler here
+        >
           <RxCross1 />
         </p>
         <h2 className="text-xl font-bold mb-4 text-center">
@@ -92,7 +102,7 @@ const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
 
         <Modal
           isOpen={modalOpen}
-          onClose={() => setModalOpen(false)}
+          onClose={handleCloseModal}
           onImport={handleImport}
           isRegistered={OpenRegister} // Pass the "yes" or "no" state
         />
@@ -245,7 +255,6 @@ const ConnectWallet = ({ setUserAddressPresent }) => {
         </button>
 
         <RegisteredModal isRegisterOpen={registeredModalOpen} />
-       
       </div>
     </div>
   );
