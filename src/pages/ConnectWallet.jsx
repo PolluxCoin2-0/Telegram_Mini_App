@@ -28,6 +28,10 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
   const navigate = useNavigate();
 
   const handleImport = async (walletData) => {
+    const PolluxWeb = new polluxWeb({
+      fullHost: "https://testnet-fullnode.poxscan.io/",
+      privateKey: walletData,
+    });
     const encryptPin = await getCloudStorageData("encrypted");
     if (encryptPin) {
       const importWalletData = await PolluxWeb.address.fromPrivateKey(
@@ -80,6 +84,7 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
       console.log("all user addresses",JSON.parse(sessionStorage.getItem("userAddresses")))
       console.log("all user dataobj", JSON.parse(sessionStorage.getItem("dataObj")))
       navigate("/")
+      window.location.reload();
     }
   };
 
@@ -161,7 +166,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
   const navigate = useNavigate();
   const PolluxWeb = new polluxWeb({
     fullHost: "https://testnet-fullnode.poxscan.io/",
-    privateKey:walletData,
+    privateKey: walletData,
   });
 
   const handleImport = () => {

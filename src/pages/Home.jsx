@@ -29,6 +29,7 @@ const Home = ({activeWalletAddressPresent}) => {
     };
 
     const walletInfo = getWalletDataByAddress(activeWalletAddressPresent);
+    console.log({walletInfo})
 
     const currentDate = new Date().toISOString().split("T")[0];
     if (!activeWalletAddressPresent) {
@@ -36,7 +37,7 @@ const Home = ({activeWalletAddressPresent}) => {
       return;
     }
 
-    // const votePower = await getVotePower(walletAddress);
+    // const votePower = await getVotePower(activeWalletAddressPresent);
     // const totalAmount =
     //   votePower.data.frozenV2.reduce(
     //     (sum, item) => sum + (item.amount || 0),
