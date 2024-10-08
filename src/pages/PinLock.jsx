@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { useState } from "react";
 import PinInput from "react-pin-input";
 import { Link } from "react-router-dom"; // Import Link
@@ -25,17 +26,12 @@ const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
 
       if (storedUserAddressPresent) {
         // Initialize an object to store wallet addresses and corresponding data
-        let walletDataStore =
-          JSON.parse(sessionStorage.getItem("dataObj")) || {};
+        let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
 
-        for (let i = 0; i < storedUserAddressPresent.legnth; i++) {
+        for (let i = 0; i < storedUserAddressPresent.length; i++) {
           if (storedUserAddressPresent[i]?.originalWalletAddress) {
             // Fetch data for each wallet address
-            const dataObj = await postLogin(
-              storedUserAddressPresent[i]?.originalWalletAddress
-                .originalWalletAddress
-            );
-
+            const dataObj = await postLogin(storedUserAddressPresent[i]?.originalWalletAddress);
             // // // Check if dataObj exists and store it as key-value pair in the object
             if (dataObj?.data) {
               walletDataStore[

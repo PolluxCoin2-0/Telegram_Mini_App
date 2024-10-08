@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import UvitokenLogo from "../assets/UvitokenLogo.png";
 import { useEffect, useState } from "react";
 import { getCloudStorageData } from "../utils/TelegramCloud";
@@ -7,6 +7,7 @@ const Navbar = ({
   userAddressPresent,
   setUserAddressFromState,
   userAddressFromState,
+  setActiveWalletAddressPresent
 }) => {
   // const [userAddressFromState, setUserAddressFromStateInternal] = useState(() => {
   //   const savedAddresses = sessionStorage.getItem('userAddresses');
@@ -14,6 +15,7 @@ const Navbar = ({
   // });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleWalletClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -39,16 +41,16 @@ const Navbar = ({
           (item) => item.originalWalletAddress
         );
         setUserAddressFromState(originalWalletAddresses);
+        setActiveWalletAddressPresent(originalWalletAddresses[0]);
       } else if (parsedUserData?.originalWalletAddress) {
         // If there is a single wallet address, update it
         setUserAddressFromState([parsedUserData.originalWalletAddress]);
+        setActiveWalletAddressPresent(parsedUserData.originalWalletAddress);
       }
     };
 
     fetchData();
-  }, [userAddressPresent]); // Remove trailing comma
-
-  console.log("useraddresses from navbar", userAddressFromState);
+  }, [userAddressPresent  ]); // Remove trailing comma
 
   // If there are no addresses in sessionStorage, show "Connect Wallet"
   const firstAddress =
@@ -95,7 +97,7 @@ const Navbar = ({
 
         {/* Dropdown list */}
         {isDropdownOpen && userAddressFromState.length > 1 && (
-          <div className="absolute top-14 mt-2 right-0 bg-gray-800 border border-gray-600 rounded-md shadow-lg w-48">
+          <div className="absolute top-14 mt-2 right-0 bg-gray-800 border border-gray-600 rounded-md shadow-lg w-48 z-50">
             <ul className="text-white text-sm md:text-base">
               {userAddressFromState.slice(1).map((address, index) => (
                 <li
@@ -115,7 +117,9 @@ const Navbar = ({
                       "userAddresses",
                       JSON.stringify(reorderedAddresses)
                     );
+                    setActiveWalletAddressPresent(selectedAddress);
                     setIsDropdownOpen(false); // Close dropdown after selection
+                    navigate("/")
                   }}
                 >
                   {address.slice(0, 8)}...{address.slice(-10)}

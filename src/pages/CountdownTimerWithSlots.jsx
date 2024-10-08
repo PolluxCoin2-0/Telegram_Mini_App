@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
 
-const CountdownTimerWithSlots = ({setCurrentSlotNumber}) => {
+const CountdownTimerWithSlots = ({ setCurrentSlotNumber }) => {
   const slotDuration = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
   const baseTime = new Date();
-  baseTime.setHours(20, 0, 0, 0); // Base start time: 8:00 PM
+  baseTime.setHours(15, 24, 0, 0); // Base start time: 15:24 (3:24 PM)
 
   const getCurrentSlotData = () => {
     const now = new Date();
 
-    // If the current time is before 8:00 PM today, subtract one day from the base time
+    // If the current time is before 15:24 today, subtract one day from the base time
     if (now < baseTime) {
       baseTime.setDate(baseTime.getDate() - 1);
     }
@@ -69,23 +69,22 @@ const CountdownTimerWithSlots = ({setCurrentSlotNumber}) => {
 };
 
 const TimerBox = ({ value, label }) => (
-    <div className="timer w-16">
-      <div
-        className="py-4 px-2 rounded-lg backdrop-blur-md bg-white/10 bg-opacity-20 shadow-lg border border-white/20"
-        style={{
-          background:
-            "linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))",
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-        }}
-      >
-        <h3 className="countdown-element font-Cormorant font-semibold text-2xl text-black text-center">
-          {String(value).padStart(2, "0")}
-        </h3>
-      </div>
-      <p className="text-lg font-Cormorant font-normal text-gray-900 mt-1 text-center w-full">{label}</p>
+  <div className="timer w-16">
+    <div
+      className="py-4 px-2 rounded-lg backdrop-blur-md bg-white/10 bg-opacity-20 shadow-lg border border-white/20"
+      style={{
+        background:
+          "linear-gradient(145deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05))",
+        boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <h3 className="countdown-element font-Cormorant font-semibold text-2xl text-black text-center">
+        {String(value).padStart(2, "0")}
+      </h3>
     </div>
-  );
-  
+    <p className="text-lg font-Cormorant font-normal text-gray-900 mt-1 text-center w-full">{label}</p>
+  </div>
+);
 
 const Separator = () => (
   <h3 className="font-manrope font-semibold text-2xl text-gray-900">:</h3>

@@ -26,6 +26,7 @@ export const encryptString = (text) => {
  * @returns {string} - The encrypted string in Base64 format.
  */
 export const encryptStringWithPin = (text, encryptionSalt) => {
+  
   // Parse the salt as UTF-8 and use it as the encryption key
   const saltKey = CryptoJS.enc.Utf8.parse(encryptionSalt); // Ensure the salt is parsed correctly
 
@@ -59,9 +60,8 @@ export const decryptString = (cipherText) => {
  * @returns {string} - The decrypted string.
  */
 export const decryptStringWithPin = (cipherText, encryptionSalt) => {
-  // Parse the salt as UTF-8 and use it as the decryption key
   const saltKey = CryptoJS.enc.Utf8.parse(encryptionSalt); // Ensure the salt is parsed correctly
-
+  
   const decrypted = CryptoJS.AES.decrypt(cipherText, saltKey, {
     mode: CryptoJS.mode.ECB,
     padding: CryptoJS.pad.Pkcs7,

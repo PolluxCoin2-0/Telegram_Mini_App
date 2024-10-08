@@ -28,6 +28,10 @@ const GeneratePin = () => {
     // Validate the PIN length
     if (newPin.length === 4) {
       const encryptData = encryptString(newPin);
+      window.Telegram.WebApp.CloudStorage.removeItems('userData',(value,value2)=>{
+        console.log(value2)
+      })
+      sessionStorage.clear();
       setCloudStorageData("encrypted", encryptData);
       setErrorMessage(""); // Clear error message
       navigate("/");

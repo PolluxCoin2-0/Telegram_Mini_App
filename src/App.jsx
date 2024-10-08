@@ -16,10 +16,11 @@ const App = () => {
   const [pinEntered, setPinEntered] = useState(false);
   const [userAddressPresent, setUserAddressPresent] = useState(false);
   const [userAddressFromState, setUserAddressFromState] = useState([]);
+  const [activeWalletAddressPresent, setActiveWalletAddressPresent] = useState("");
+
   // Check sessionStorage to persist the state on page refresh
   useEffect(() => {
     const storedPinEntered = sessionStorage.getItem("pinEntered");
-
     if (storedPinEntered === "true") {
       setPinEntered(true);
     }
@@ -35,6 +36,7 @@ const App = () => {
                 userAddressPresent={userAddressPresent}
                 userAddressFromState={userAddressFromState}
                 setUserAddressFromState={setUserAddressFromState}
+                setActiveWalletAddressPresent={setActiveWalletAddressPresent}
               />
               <ToastContainer
                 position="top-right"
@@ -45,7 +47,7 @@ const App = () => {
                 toastClassName="custom-toast"
               />
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Home  activeWalletAddressPresent={activeWalletAddressPresent} />} />
                 <Route path="/buyCoin" element={<ComingSoon />} />
                 <Route
                   path="/wallet"

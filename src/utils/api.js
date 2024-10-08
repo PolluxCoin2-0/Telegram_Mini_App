@@ -152,3 +152,67 @@ export const saveDataOfMiningInDatabase = async (
     console.log(error);
   }
 };
+
+// SIGNUP
+export const postSignup = async (walletAddress, email, referredBy) => {
+  try {
+    const res = await axios.post(BASE_URL + "/signUp", {
+      walletAddress: walletAddress,
+      email: email,
+      referredBy: referredBy,
+    });
+    return res?.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// OTP
+export const postOTPVerify = async (email, otp) => {
+  try {
+    const res = await axios.post(BASE_URL + "/VerifyOtp", {
+      email: email,
+      otp: otp,
+    });
+    return res?.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// Set Referrer
+export const postSetReferrer = async (walletAddress, referrer) => {
+  try {
+    const res = await axios.post(
+      BASE_URL + "/setReferrer",
+      {
+         "referrer": referrer,
+         "walletAddress": walletAddress
+      },
+    );
+    return res?.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// referral verification
+export const postVerifyReferral = async (token, walletAddress, referralCode) => {
+  try {
+    const res = await axios.post(
+      BASE_URL + "/verifyReferralCode",
+      {
+        walletAddress: walletAddress,
+        referralCode: referralCode,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return res?.data;
+  } catch (error) {
+    console.log(error);
+  }
+};

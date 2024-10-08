@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { toast } from "react-toastify";
 import polluxWeb from "polluxweb";
 import {
@@ -13,19 +14,24 @@ import {
 import { useState } from "react";
 import { getCloudStorageData } from "../utils/TelegramCloud";
 import CountdownTimerWithSlots from "./CountdownTimerWithSlots";
+import { decryptString, decryptStringWithPin } from "../utils/Encryption";
 
-const Home = () => {
+const Home = ({activeWalletAddressPresent}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentSlotNumber, setCurrentSlotNumber] = useState(null);
 
   const handleTapMining = async () => {
-    const storedUserAddressPresent = await getCloudStorageData("userData");
-    const walletAddress = storedUserAddressPresent?.originalWalletAddress;
-    const dataObj = sessionStorage.getItem("dataObj");
-    const parsedObj = JSON.parse(dataObj);
+    let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
+
+    // Function to get wallet data by address
+    const getWalletDataByAddress = (address) => {
+    return walletDataStore[address]; // Return the object or null if the address doesn't exist
+    };
+
+    const walletInfo = getWalletDataByAddress(activeWalletAddressPresent);
 
     const currentDate = new Date().toISOString().split("T")[0];
-    if (!walletAddress) {
+    if (!activeWalletAddressPresent) {
       toast.error("Connect your wallet.");
       return;
     }
@@ -42,16 +48,16 @@ const Home = () => {
     //   return;
     // }
 
-    const userData = await getDataOfMiningFromDatabase(walletAddress);
+    const userData = await getDataOfMiningFromDatabase(activeWalletAddressPresent);
 
-    if (
-      userData?.data?.userSlotNumber === currentSlotNumber &&
-      userData?.data?.userSlotDate.split("T")[0] === currentDate &&
-      walletAddress === userData?.data?.walletAddress
-    ) {
-      toast.error("You have already minted in this slot.");
-      return;
-    }
+    // if (
+    //   userData?.data?.userSlotNumber === currentSlotNumber &&
+    //   userData?.data?.userSlotDate.split("T")[0] === currentDate &&
+    //   activeWalletAddressPresent === userData?.data?.walletAddress
+    // ) {
+    //   toast.error("You have already minted in this slot.");
+    //   return;
+    // }
 
     if (isLoading) {
       return;
@@ -59,27 +65,45 @@ const Home = () => {
 
     setIsLoading(true);
     try {
-      const apiData = await postMintUser(walletAddress, parsedObj?.token);
-      console.log(apiData);
+      const apiData = await postMintUser(activeWalletAddressPresent, walletInfo?.token);
+      console.log("apidata",apiData);
       const storedUserAddressPresent = await getCloudStorageData("userData");
-      const privateKeyUser = storedUserAddressPresent?.privateKey;
+
+      // Function to find the matching wallet address object
+      const findWalletObjectByAddress = (wallets, address) => {
+        return wallets.find(wallet => {
+          // Return the result of the comparison
+          return wallet?.originalWalletAddress === address;
+        });
+      };
+
+      // Get the matched object
+      const matchedWalletObject = findWalletObjectByAddress(JSON.parse(storedUserAddressPresent), activeWalletAddressPresent);
+      const privateKeyUser = matchedWalletObject?.privateKey;
+
+      const encryptPin = await getCloudStorageData("encrypted");
+      const pin = decryptString(encryptPin);
+      
+      const decryptedPrivateKey = decryptStringWithPin(privateKeyUser, pin);
 
       const PolluxWeb = new polluxWeb({
-        fullHost: "https://exchangefullnode.poxscan.io/",
-        privateKey: privateKeyUser,
+        fullHost: "https://testnet-fullnode.poxscan.io/",
+        privateKey: decryptedPrivateKey,
       });
 
-      const address = PolluxWeb.contract().at(
-        "PApFeUXaX7jjHu3RQcwvgzy1tCwt3G9Q42"
+      const address =await PolluxWeb.contract().at(
+        "PFns6bXGCoqNsFQ156ZMjNRbP3rE9bytbX"
       );
-      const a = await address.mint().send();
-      console.log("a", a);
-      const signTransaction1 = await PolluxWeb.trx.sign(a);
-      console.log("signTransaction1", signTransaction1);
-      const broadcast1 = await PolluxWeb.trx.sendRawTransaction(
-        signTransaction1
-      );
-      console.log("broadcast1", broadcast1);
+      console.log({address});
+      let txn ;
+      try {
+        txn= await address.mint().send();
+
+      } catch (error) {
+        console.log(error,"errrrorororoorororo");
+        toast.error("something went wrong")
+      }
+      console.log(txn);
 
       // check transaction result >> SUCCESS : REVERT
       const transactionResult = await getTransactionResult(
@@ -89,9 +113,9 @@ const Home = () => {
 
       if (transactionResult?.data?.receipt?.result === "SUCCESS") {
         const savedData = await saveUserMinigData(
-          parsedObj?.token,
+          walletInfo?.token,
           apiData?.data?.transaction?.txID,
-          walletAddress,
+          activeWalletAddressPresent,
           transactionResult?.data?.receipt?.result
         );
         console.log("savedData", savedData);
@@ -100,11 +124,11 @@ const Home = () => {
       // Distribute referral rewards
       if (
         transactionResult?.data?.receipt?.result === "SUCCESS" &&
-        parsedObj?.referredBy
+        walletInfo?.referredBy
       ) {
-        const referralData = await postDistributeReferralRewards(walletAddress);
+        const referralData = await postDistributeReferralRewards(activeWalletAddressPresent);
         console.log("referralData", referralData);
-
+        
         const signTransaction2 = await PolluxWeb.trx.sign(
           referralData?.data?.transaction
         );
@@ -116,16 +140,16 @@ const Home = () => {
       }
 
       // update token balance
-      const updateTokenBalance = await updateBalance(parsedObj?.token);
+      const updateTokenBalance = await updateBalance(walletInfo?.token);
       console.log("updateTokenBalance", updateTokenBalance);
 
       toast.success("Your mining has started.");
 
       // save the mining data in database
       const usersavedData = await saveDataOfMiningInDatabase(
-        parsedObj?.token,
+        walletInfo  ?.token,
         currentSlotNumber,
-        walletAddress
+        activeWalletAddressPresent
       );
 
       console.log("saveDataOfMiningInDatabase", usersavedData);
