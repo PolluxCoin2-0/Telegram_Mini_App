@@ -15,14 +15,15 @@ import "react-toastify/dist/ReactToastify.css";
 const App = () => {
   const [pinEntered, setPinEntered] = useState(false);
   const [userAddressPresent, setUserAddressPresent] = useState(false);
-    // Check sessionStorage to persist the state on page refresh
-    useEffect(() => {
-      const storedPinEntered = sessionStorage.getItem("pinEntered");
-    
-      if (storedPinEntered === "true") {
-        setPinEntered(true);
-      }
-    }, [userAddressPresent]);
+  const [userAddressFromState, setUserAddressFromState] = useState([]);
+  // Check sessionStorage to persist the state on page refresh
+  useEffect(() => {
+    const storedPinEntered = sessionStorage.getItem("pinEntered");
+
+    if (storedPinEntered === "true") {
+      setPinEntered(true);
+    }
+  }, [userAddressPresent]);
 
   return (
     <Provider store={store}>
@@ -30,26 +31,43 @@ const App = () => {
         <Router>
           {pinEntered ? (
             <>
-              <Navbar userAddressPresent={userAddressPresent} />
+              <Navbar
+                userAddressPresent={userAddressPresent}
+                userAddressFromState={userAddressFromState}
+                setUserAddressFromState={setUserAddressFromState}
+              />
               <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          theme="dark"
-          newestOnTop={true}
-          pauseOnFocusLoss
-          toastClassName="custom-toast"
-        />
+                position="top-right"
+                autoClose={3000}
+                theme="dark"
+                newestOnTop={true}
+                pauseOnFocusLoss
+                toastClassName="custom-toast"
+              />
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/buyCoin" element={<ComingSoon />} />
-                <Route path="/wallet" element={<ConnectWallet setUserAddressPresent={setUserAddressPresent} />} />
+                <Route
+                  path="/wallet"
+                  element={
+                    <ConnectWallet
+                      setUserAddressPresent={setUserAddressPresent}
+                      setUserAddressFromState={setUserAddressFromState}
+                    />
+                  }
+                />
               </Routes>
             </>
           ) : (
             <Routes>
               <Route
                 path="/"
-                element={<PinLock setPinEntered={setPinEntered} setUserAddressPresent={setUserAddressPresent} />}
+                element={
+                  <PinLock
+                    setPinEntered={setPinEntered}
+                    setUserAddressPresent={setUserAddressPresent}
+                  />
+                }
               />
               <Route path="/generatepin" element={<GeneratePin />} />
             </Routes>

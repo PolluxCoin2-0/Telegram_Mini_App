@@ -15,20 +15,25 @@ export const setCloudStorageData = async (key, data) => {
 
 // Function to get data from Telegram WebApp Cloud Storage
 export const getCloudStorageData = async (key) => {
-    if (window.Telegram?.WebApp) {
-      return new Promise((resolve, reject) => {
-        window.Telegram.WebApp.CloudStorage.getItem(key, (value, value2) => {
-          try {
-            // Parse the returned value
-            const parsedData = JSON.parse(value2);
-            resolve(parsedData); // Resolve the promise with parsed data
-          } catch (error) {
-            console.error("Error parsing data:", error);
-            reject(new Error("Failed to parse data from CloudStorage"));
-          }
-        });
+  if (window.Telegram?.WebApp) {
+    return new Promise((resolve, reject) => {
+      window.Telegram.WebApp.CloudStorage.getItem(key, (value, value2) => {
+        if (!value2) {
+          // Handle the case where the item does not exist
+          resolve(null); // Resolve with null if no value is found
+          return;
+        }
+        try {
+          // Parse the returned value
+          const parsedData = JSON.parse(value2);
+          resolve(parsedData); // Resolve the promise with parsed data
+        } catch (error) {
+          console.error("Error parsing data:", error);
+          reject(new Error("Failed to parse data from CloudStorage"));
+        }
       });
-    } else {
-      throw new Error("Telegram WebApp API not available");
-    }
-  };
+    });
+  } else {
+    throw new Error("Telegram WebApp API not available");
+  }
+};

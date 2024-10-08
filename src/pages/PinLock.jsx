@@ -7,22 +7,46 @@ import { postLogin } from "../utils/api";
 
 const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
   const [errorMessage, setErrorMessage] = useState(""); // State to hold error message
- 
-  const handlePinComplete = async(value) => {
+
+  const handlePinComplete = async (value) => {
     setUserAddressPresent(false);
-    const encryptPin = await getCloudStorageData('encrypted');
-      const pin = decryptString(encryptPin);
-      if(pin===value){
-        setPinEntered(true);
-        sessionStorage.setItem("pinEntered", value ? "true" : "false");
-        setErrorMessage("");
-        const storedUserAddressPresent = await getCloudStorageData('userData');
-        const dataObj = await postLogin(storedUserAddressPresent?.originalWalletAddress)
-        console.log("dataObj",dataObj?.data);
-        sessionStorage.setItem("dataObj", JSON.stringify(dataObj?.data));
-        setUserAddressPresent(true);
-      }
-    
+    const encryptPin = await getCloudStorageData("encrypted");
+    const pin = decryptString(encryptPin);
+    if (pin === value) {
+      setPinEntered(true);
+      sessionStorage.setItem("pinEntered", value ? "true" : "false");
+      setErrorMessage("");
+     const storedUserAddressPresent = await getCloudStorageData("userData");
+
+if (storedUserAddressPresent) {
+  console.log("storedUserData", storedUserAddressPresent);
+  console.log("wallet222222222",storedUserAddressPresent[0]);
+    console.log("walletadresssssssss2222222222222222", storedUserAddressPresent[0]?.originalWalletAddress);
+  // Initialize an object to store wallet addresses and corresponding data
+  let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
+
+  for (let i =0;i<storedUserAddressPresent.legnth;i++) {
+    console.log("wallet",storedUserAddressPresent[i]);
+    console.log("walletadresssssssss", storedUserAddressPresent[i]?.originalWalletAddress);
+    if (storedUserAddressPresent[i]?.originalWalletAddress) {
+      // Fetch data for each wallet address
+      // const dataObj = await postLogin(wallet.originalWalletAddress);
+
+      // // // Check if dataObj exists and store it as key-value pair in the object
+      // if (dataObj?.data) {
+      //   walletDataStore[wallet.originalWalletAddress] = dataObj.data;
+      // }
+    }
+  }
+
+  // Store the object in sessionStorage
+  sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
+}
+console.log("dataobjjjjjjjjjjjjjj", JSON.parse(sessionStorage.getItem("dataObj")))
+      setUserAddressPresent(true);
+    } else {
+      setErrorMessage("Entered Pin is wrong.");
+    }
   };
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-100 via-yellow-100 to-pink-100 p-4">
@@ -38,7 +62,7 @@ const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
           onChange={(value, index) => {}}
           type="numeric"
           inputMode="number"
-          style={{ display: 'flex', justifyContent: 'center', gap: '8px' }} // Center the inputs
+          style={{ display: "flex", justifyContent: "center", gap: "8px" }} // Center the inputs
           inputStyle={{
             borderColor: "gray",
             borderRadius: "12px", // Slightly smaller border radius for a compact look

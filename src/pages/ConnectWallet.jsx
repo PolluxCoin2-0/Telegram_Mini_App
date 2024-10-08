@@ -1,12 +1,10 @@
 import polluxWeb from "polluxweb";
 import { useState } from "react";
 import { decryptString, encryptStringWithPin } from "../utils/Encryption";
-
 import {
   getCloudStorageData,
   setCloudStorageData,
 } from "../utils/TelegramCloud";
-import { useNavigate } from "react-router-dom";
 import { RxCross1 } from "react-icons/rx";
 
 const PolluxWeb = new polluxWeb({
@@ -15,41 +13,61 @@ const PolluxWeb = new polluxWeb({
 
 //Registered Modal
 
-const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
+const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
   const [OpenRegister, setOpenRegister] = useState(""); // Yes or No state
   const [modalOpen, setModalOpen] = useState(false);
-  const navigate = useNavigate();
 
   const handleImport = async (walletData) => {
-    setUserAddressPresent(false);
     const encryptPin = await getCloudStorageData("encrypted");
     if (encryptPin) {
       const importWalletData = await PolluxWeb.address.fromPrivateKey(
         walletData
       );
-      sessionStorage.setItem("userAddress", importWalletData);
+
+      // Store user address in sessionStorage (array form)
+      let addresses = JSON.parse(sessionStorage.getItem("userAddresses")) || [];
+      addresses.push(importWalletData);
+      sessionStorage.setItem("userAddresses", JSON.stringify(addresses));
+
       const pin = decryptString(encryptPin);
       const encryptedWalletAddress = encryptStringWithPin(
         importWalletData,
         pin
       );
       const encryptPrivateKey = encryptStringWithPin(walletData, pin);
-      await setCloudStorageData("userData", {
+      // Fetch existing wallet data from cloud storage
+      let existingWalletData = await getCloudStorageData("userData");
+
+      // Ensure existingWalletData is an array
+      if (existingWalletData) {
+        try {
+          existingWalletData = JSON.parse(existingWalletData); // Parse if it's a string
+        } catch (error) {
+          existingWalletData = []; // Reset to empty array if parsing fails
+        }
+      } else {
+        existingWalletData = []; // If no existing data, initialize as an empty array
+      }
+
+      // Save the updated array back to cloud storage
+      existingWalletData.push({
         walletAddress: encryptedWalletAddress,
         privateKey: encryptPrivateKey,
         originalWalletAddress: importWalletData,
       });
+
+      await setCloudStorageData("userData", JSON.stringify(existingWalletData));
     }
-    console.log("import wallet");
-    navigate(0);
-    setUserAddressPresent(true);
   };
 
   // Function to handle closing the modal and navigating back
   const handleCloseModal = () => {
     setModalOpen(false); // Close the modal
-    navigate(0); // Navigate back to the Import Wallet page
   };
+
+  const handleRegisterCloseModal=()=>{
+    setRegisteredModalOpen(!isRegisterOpen);
+  }
 
   return (
     <div
@@ -64,7 +82,7 @@ const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
       >
         <p
           className="flex flex-row justify-end -mt-4 -mr-4 pb-1 cursor-pointer"
-          onClick={handleCloseModal} // Add the click handler here
+          onClick={handleRegisterCloseModal} // Add the click handler here
         >
           <RxCross1 />
         </p>
@@ -114,6 +132,8 @@ const RegisteredModal = ({ isRegisterOpen, setUserAddressPresent }) => {
 // Modal component
 const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
   const [walletData, setWalletData] = useState("");
+  const [email, setEmail] = useState("");
+  const [enteredReferralAddress, setEnteredReferralAddress] = useState("");
   const [error, setError] = useState(""); // State for error message
 
   const handleImport = () => {
@@ -124,6 +144,121 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
     setError(""); // Clear any previous error
     onImport(walletData);
     onClose(); // Close the modal after importing
+  };
+
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const handleNewRegister=async(e)=>{
+    e.preventDefault();
+
+    if(!email || walletData.length===0){
+      // toast.error("Please enter your email and wallet address!");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      // toast.error("Please enter a valid email address!");
+      return;
+    } 
+
+    try {
+      const importWalletData = await PolluxWeb.address.fromPrivateKey(
+        walletData
+      );
+      const apiData = await postSignup(importWalletData, email, enteredReferralAddress)
+
+      console.log(apiData)
+
+      if(apiData?.data === "Invalid Referral Code"){
+        // toast.error("Invalid Referral Code");
+        return;
+      }
+      
+      if(apiData?.data === "WalletAddress Already Exist"){
+        // toast.error("WalletAddress Already Exist");
+        return;
+      }
+  
+      if(apiData?.data?.d?.email){
+
+        const apiDataOfOTP = await postOTPVerify(email, apiData?.data?.d?.otp);
+
+        if (apiDataOfOTP?.data?._id) {
+          if(enteredReferralAddress){
+            const setReferrerdata = await postSetReferrer(importWalletData, enteredReferralAddress)
+            console.log(setReferrerdata)
+      
+            const signedTransaction = await window.pox.signdata(
+              setReferrerdata?.data?.transaction
+            );
+        
+            console.log("signedTranaction3",signedTransaction);
+            const broadcast = JSON.stringify(
+              await window.pox.broadcast(JSON.parse(signedTransaction[1]))
+            );
+        
+            console.log("boradcast3",broadcast)
+          }
+         
+          // dispatch(setDataObject(apiDataOfOTP?.data));
+          if (enteredReferralAddress) {
+            verifyReferralfunc();
+          } else {
+            navigate("/");
+          }
+        } 
+      }  
+    } catch (error) {
+      console.error(error);
+      // toast.error("An error occurred. Please try again.");
+    }
+    
+  }
+
+  const verifyReferralfunc = async (token,  walletAddress, referredBy) => {
+    const referralApi = await postVerifyReferral(
+      token,
+      walletAddress,
+      referredBy
+    );
+    
+    if (referralApi?.data?.trx1) {
+      // Sign tranaction and broadcast transaction for trx1
+      const signedTransaction1 = await window.pox.signdata(
+        referralApi?.data?.trx1?.transaction
+      );
+
+      console.log("signTranaction1",signedTransaction1)
+
+       const broadcast1 = JSON.stringify(
+        await window.pox.broadcast(JSON.parse(signedTransaction1[1]))
+      );
+
+      console.log("broadcast1",broadcast1)
+
+      // Sign tranaction and broadcast transaction for trx2
+      const signedTransaction2 = await window.pox.signdata(
+        referralApi?.data?.trx2?.transaction
+      );
+
+      console.log("signTranaction2",signedTransaction2)
+      
+       const broadcast2 = JSON.stringify(
+        await window.pox.broadcast(JSON.parse(signedTransaction2[1]))
+      );
+
+      console.log("broadacst2", broadcast2);
+
+      // toast.success("Wallet address verified!");
+      // dispatch(setDataObject(referralApi?.data?.user));
+      // dispatch(setLogin(true));
+      // navigate("/");
+    } else {
+      // toast.error("Something went wrong!");
+    }
   };
 
   return (
@@ -153,7 +288,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
           type="text"
           value={walletData}
           onChange={(e) => setWalletData(e.target.value)}
-          placeholder="Enter wallet data"
+          placeholder="Enter Private Key"
           className="border p-2 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
         />
 
@@ -161,12 +296,20 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
           <>
             <input
               type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter email "
               className="border p-2 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
             />
 
             <input
               type="text"
+              value={enteredReferralAddress}
+              onChange={(e) => {
+                const fullValue = e.target.value;
+                const lastSegment = fullValue.split('/').pop(); 
+                setEnteredReferralAddress(lastSegment); 
+              }}
               placeholder="Enter referral address"
               className="border p-2 w-full mb-4 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
             />
@@ -175,7 +318,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
 
         <div className="flex justify-center space-x-4">
           <button
-            onClick={handleImport}
+          onClick={isRegistered === "yes" ? handleImport : handleNewRegister}
             className="relative inline-flex items-center justify-center w-full max-w-xs p-4 px-8 py-2 overflow-hidden font-medium text-white transition duration-300 ease-out rounded-xl shadow-lg group hover:scale-105"
           >
             <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-green-400 via-yellow-400 to-pink-400 rounded-xl opacity-90 transition duration-300 ease-out group-hover:scale-110"></span>
@@ -198,18 +341,18 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
   );
 };
 
-const ConnectWallet = ({ setUserAddressPresent }) => {
-  const [modalOpen, setModalOpen] = useState(false);
+const ConnectWallet = ({ setUserAddressFromState }) => {
   const [registeredModalOpen, setRegisteredModalOpen] = useState(false);
-  const navigate = useNavigate();
 
   const polluxfunc = async () => {
-    setUserAddressPresent(false);
     const encryptPin = await getCloudStorageData("encrypted");
     if (encryptPin) {
       const account = await PolluxWeb.createAccount();
-      console.log(account);
-      sessionStorage.setItem("userAddress", account.address.base58);
+
+      // Store user address in sessionStorage (array form)
+      let addresses = JSON.parse(sessionStorage.getItem("userAddresses")) || [];
+      addresses.push(account.address.base58);
+      sessionStorage.setItem("userAddresses", JSON.stringify(addresses));
 
       const pin = decryptString(encryptPin);
       const encryptedWalletAddress = encryptStringWithPin(
@@ -217,14 +360,31 @@ const ConnectWallet = ({ setUserAddressPresent }) => {
         pin
       );
       const encryptPrivateKey = encryptStringWithPin(account?.privateKey, pin);
-      await setCloudStorageData("userData", {
+      // Fetch existing wallet data from cloud storage
+      let existingWalletData = await getCloudStorageData("userData");
+
+      // Ensure existingWalletData is an array
+      if (existingWalletData) {
+        try {
+          existingWalletData = JSON.parse(existingWalletData); // Parse if it's a string
+        } catch (error) {
+          existingWalletData = []; // Reset to empty array if parsing fails
+        }
+      } else {
+        existingWalletData = []; // If no existing data, initialize as an empty array
+      }
+
+      // Add the new wallet data object to the existing array
+      existingWalletData.push({
         walletAddress: encryptedWalletAddress,
         privateKey: encryptPrivateKey,
         originalWalletAddress: account.address.base58,
       });
+
+      // Save the updated array back to cloud storage
+      await setCloudStorageData("userData", JSON.stringify(existingWalletData));
+      setUserAddressFromState(addresses);
     }
-    navigate(0);
-    setUserAddressPresent(true);
   };
 
   return (
@@ -254,7 +414,7 @@ const ConnectWallet = ({ setUserAddressPresent }) => {
           </span>
         </button>
 
-        <RegisteredModal isRegisterOpen={registeredModalOpen} />
+        <RegisteredModal isRegisterOpen={registeredModalOpen} setRegisteredModalOpen={setRegisteredModalOpen}/>
       </div>
     </div>
   );
