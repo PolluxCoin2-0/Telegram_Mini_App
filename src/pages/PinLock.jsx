@@ -16,33 +16,42 @@ const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
       setPinEntered(true);
       sessionStorage.setItem("pinEntered", value ? "true" : "false");
       setErrorMessage("");
-     const storedUserAddressPresent = await getCloudStorageData("userData");
+      const storedUserAddressPresentwithoutParsing = await getCloudStorageData(
+        "userData"
+      );
+      const storedUserAddressPresent = JSON.parse(
+        storedUserAddressPresentwithoutParsing
+      );
 
-if (storedUserAddressPresent) {
-  console.log("storedUserData", storedUserAddressPresent);
-  console.log("wallet222222222",storedUserAddressPresent[0]);
-    console.log("walletadresssssssss2222222222222222", storedUserAddressPresent[0]?.originalWalletAddress);
-  // Initialize an object to store wallet addresses and corresponding data
-  let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
+      if (storedUserAddressPresent) {
+        // Initialize an object to store wallet addresses and corresponding data
+        let walletDataStore =
+          JSON.parse(sessionStorage.getItem("dataObj")) || {};
 
-  for (let i =0;i<storedUserAddressPresent.legnth;i++) {
-    console.log("wallet",storedUserAddressPresent[i]);
-    console.log("walletadresssssssss", storedUserAddressPresent[i]?.originalWalletAddress);
-    if (storedUserAddressPresent[i]?.originalWalletAddress) {
-      // Fetch data for each wallet address
-      // const dataObj = await postLogin(wallet.originalWalletAddress);
+        for (let i = 0; i < storedUserAddressPresent.legnth; i++) {
+          if (storedUserAddressPresent[i]?.originalWalletAddress) {
+            // Fetch data for each wallet address
+            const dataObj = await postLogin(
+              storedUserAddressPresent[i]?.originalWalletAddress
+                .originalWalletAddress
+            );
 
-      // // // Check if dataObj exists and store it as key-value pair in the object
-      // if (dataObj?.data) {
-      //   walletDataStore[wallet.originalWalletAddress] = dataObj.data;
-      // }
-    }
-  }
+            // // // Check if dataObj exists and store it as key-value pair in the object
+            if (dataObj?.data) {
+              walletDataStore[
+                storedUserAddressPresent[i]?.originalWalletAddress
+              ] = dataObj.data;
+            }
+          }
+        }
 
-  // Store the object in sessionStorage
-  sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
-}
-console.log("dataobjjjjjjjjjjjjjj", JSON.parse(sessionStorage.getItem("dataObj")))
+        // Store the object in sessionStorage
+        sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
+      }
+      console.log(
+        "dataobjjjjjjjjjjjjjj",
+        JSON.parse(sessionStorage.getItem("dataObj"))
+      );
       setUserAddressPresent(true);
     } else {
       setErrorMessage("Entered Pin is wrong.");
