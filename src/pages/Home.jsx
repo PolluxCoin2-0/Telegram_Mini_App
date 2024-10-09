@@ -109,7 +109,7 @@ const Home = ({activeWalletAddressPresent}) => {
 
       // check transaction result >> SUCCESS : REVERT
       const transactionResult = await getTransactionResult(
-        apiData?.data?.transaction?.txID
+        txn
       );
       console.log("result", transactionResult);
 
