@@ -62,6 +62,14 @@ const App = () => {
             </>
           ) : (
             <Routes>
+               <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                theme="dark"
+                newestOnTop={true}
+                pauseOnFocusLoss
+                toastClassName="custom-toast"
+              />
               <Route
                 path="/"
                 element={

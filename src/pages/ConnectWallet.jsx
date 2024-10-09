@@ -37,46 +37,50 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
 
       const dataObj = await postLogin(importWalletData);
       console.log("dataObj Import", dataObj?.data);
-      
-      let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
-      walletDataStore[importWalletData] = dataObj?.data;
-      sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
 
-      // Store user address in sessionStorage (array form)
-      let addresses = JSON.parse(sessionStorage.getItem("userAddresses")) || [];
-      addresses.push(importWalletData);
-      sessionStorage.setItem("userAddresses", JSON.stringify(addresses));
-
-      const pin = decryptString(encryptPin);
-      const encryptedWalletAddress = encryptStringWithPin(
-        importWalletData,
-        pin
-      );
-      const encryptPrivateKey = encryptStringWithPin(walletData, pin);
-      // Fetch existing wallet data from cloud storage
-      let existingWalletData = await getCloudStorageData("userData");
-
-      // Ensure existingWalletData is an array
-      if (existingWalletData) {
-        try {
-          existingWalletData = JSON.parse(existingWalletData); // Parse if it's a string
-        } catch (error) {
-          existingWalletData = []; // Reset to empty array if parsing fails
+      if(dataObj?.data){
+        let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
+        walletDataStore[importWalletData] = dataObj?.data;
+        sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
+  
+        // Store user address in sessionStorage (array form)
+        let addresses = JSON.parse(sessionStorage.getItem("userAddresses")) || [];
+        addresses.push(importWalletData);
+        sessionStorage.setItem("userAddresses", JSON.stringify(addresses));
+  
+        const pin = decryptString(encryptPin);
+        const encryptedWalletAddress = encryptStringWithPin(
+          importWalletData,
+          pin
+        );
+        const encryptPrivateKey = encryptStringWithPin(walletData, pin);
+        // Fetch existing wallet data from cloud storage
+        let existingWalletData = await getCloudStorageData("userData");
+  
+        // Ensure existingWalletData is an array
+        if (existingWalletData) {
+          try {
+            existingWalletData = JSON.parse(existingWalletData); // Parse if it's a string
+          } catch (error) {
+            existingWalletData = []; // Reset to empty array if parsing fails
+          }
+        } else {
+          existingWalletData = []; // If no existing data, initialize as an empty array
         }
+  
+        // Save the updated array back to cloud storage
+        existingWalletData.push({
+          walletAddress: encryptedWalletAddress,
+          privateKey: encryptPrivateKey,
+          originalWalletAddress: importWalletData,
+        });
+  
+        await setCloudStorageData("userData", JSON.stringify(existingWalletData));
+        navigate("/");
+        window.location.reload();
       } else {
-        existingWalletData = []; // If no existing data, initialize as an empty array
+        toast.error("This wallet is not registered. Please register")
       }
-
-      // Save the updated array back to cloud storage
-      existingWalletData.push({
-        walletAddress: encryptedWalletAddress,
-        privateKey: encryptPrivateKey,
-        originalWalletAddress: importWalletData,
-      });
-
-      await setCloudStorageData("userData", JSON.stringify(existingWalletData));
-      navigate("/");
-      window.location.reload();
 
       console.log("all user data", await getCloudStorageData("userData"));
       console.log(

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"; // Import Link
 import { decryptString } from "../utils/Encryption";
 import { getCloudStorageData } from "../utils/TelegramCloud";
 import { postLogin } from "../utils/api";
+import { toast } from "react-toastify";
 
 const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
   const [errorMessage, setErrorMessage] = useState(""); // State to hold error message
@@ -13,7 +14,7 @@ const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
     setUserAddressPresent(false);
     const encryptPin = await getCloudStorageData("encrypted");
     if (!encryptPin) {
-      setErrorMessage("First, Generate Your Pin!");
+     toast.error("First, Generate Your Pin!");
       return;
     }
     const pin = decryptString(encryptPin);
