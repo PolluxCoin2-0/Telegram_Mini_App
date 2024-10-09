@@ -15,12 +15,7 @@ import {
   postSignup,
   postVerifyReferral,
 } from "../utils/api";
-
-const PolluxWeb = new polluxWeb({
-  fullHost: "https://exchangefullnode.poxscan.io/",
-});
-
-//Registered Modal
+import { toast } from "react-toastify";
 
 const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
   const [OpenRegister, setOpenRegister] = useState(""); // Yes or No state
@@ -29,7 +24,7 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
 
   const handleImport = async (walletData) => {
     const PolluxWeb = new polluxWeb({
-      fullHost: "https://testnet-fullnode.poxscan.io/",
+      fullHost: "https://exchangefullnode.poxscan.io/",
       privateKey: walletData,
     });
     const encryptPin = await getCloudStorageData("encrypted");
@@ -38,7 +33,7 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
         walletData
       );
 
-      console.log(importWalletData)
+      console.log(importWalletData);
 
       const dataObj = await postLogin(importWalletData);
       console.log("dataObj Import", dataObj?.data);
@@ -80,10 +75,16 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
       let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
       walletDataStore[importWalletData] = dataObj?.data;
 
-      console.log("all user data", await getCloudStorageData("userData"))
-      console.log("all user addresses",JSON.parse(sessionStorage.getItem("userAddresses")))
-      console.log("all user dataobj", JSON.parse(sessionStorage.getItem("dataObj")))
-      navigate("/")
+      console.log("all user data", await getCloudStorageData("userData"));
+      console.log(
+        "all user addresses",
+        JSON.parse(sessionStorage.getItem("userAddresses"))
+      );
+      console.log(
+        "all user dataobj",
+        JSON.parse(sessionStorage.getItem("dataObj"))
+      );
+      navigate("/");
       window.location.reload();
     }
   };
@@ -164,10 +165,6 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
   const [enteredReferralAddress, setEnteredReferralAddress] = useState("");
   const [error, setError] = useState(""); // State for error message
   const navigate = useNavigate();
-  const PolluxWeb = new polluxWeb({
-    fullHost: "https://testnet-fullnode.poxscan.io/",
-    privateKey: walletData,
-  });
 
   const handleImport = () => {
     if (!walletData) {
@@ -188,16 +185,22 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
     e.preventDefault();
 
     if (!email || walletData.length === 0) {
-      // toast.error("Please enter your email and wallet address!");
+      toast.error("Please enter your email and wallet address!");
       return;
     }
 
     if (!validateEmail(email)) {
-      // toast.error("Please enter a valid email address!");
+      toast.error("Please enter a valid email address!");
       return;
     }
 
     try {
+      
+      const PolluxWeb = new polluxWeb({
+        fullHost: "https://exchangefullnode.poxscan.io/",
+        privateKey: walletData,
+      });
+      
       const importWalletData = await PolluxWeb.address.fromPrivateKey(
         walletData
       );
@@ -207,7 +210,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
         enteredReferralAddress
       );
 
-      console.log({apiData});
+      console.log({ apiData });
 
       if (apiData?.data === "Invalid Referral Code") {
         // toast.error("Invalid Referral Code");
@@ -221,6 +224,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
 
       if (apiData?.data?.d?.email) {
         const apiDataOfOTP = await postOTPVerify(email, apiData?.data?.d?.otp);
+        console.log({ apiDataOfOTP });
 
         if (apiDataOfOTP?.data?._id) {
           if (enteredReferralAddress) {
@@ -237,14 +241,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
             const broadcast = await PolluxWeb.trx.sendRawTransaction(
               signTransaction
             );
-            console.log("broadcast", broadcast);
-          }
-
-          // dispatch(setDataObject(apiDataOfOTP?.data));
-          if (enteredReferralAddress) {
-            verifyReferralfunc();
-          } else {
-            navigate("/");
+            console.log("broadcast240", broadcast);
           }
 
           // store to session storage
@@ -293,9 +290,20 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
           // store dataobj after signup in session storage
           let walletDataStore =
             JSON.parse(sessionStorage.getItem("dataObj")) || {};
-            if (apiData?.data) {
-          walletDataStore[importWalletData] = apiDataOfOTP?.data;
-            }
+          if (apiData?.data) {
+            walletDataStore[importWalletData] = apiDataOfOTP?.data;
+          }
+
+          if (enteredReferralAddress) {
+            verifyReferralfunc(
+              apiDataOfOTP?.data?.token,
+              importWalletData,
+              enteredReferralAddress
+            );
+          } else {
+            navigate("/");
+            window.location.reload();
+          }
         }
       }
     } catch (error) {
@@ -317,18 +325,18 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
         referralApi?.data?.trx2?.transaction
       );
       console.log("signTransaction", signTransaction2);
+
       const broadcast2 = await PolluxWeb.trx.sendRawTransaction(
-        JSON.parse(signTransaction2[1])
+        signTransaction2
       );
       console.log("broadcast", broadcast2);
-
-      // toast.success("Wallet address verified!");
-      // dispatch(setDataObject(referralApi?.data?.user));
-      // dispatch(setLogin(true));
       navigate("/");
-    } else {
-      // toast.error("Something went wrong!");
+      onClose();
+      window.location.reload();
     }
+    // else {
+    // toast.error("Something went wrong!");
+    // }
   };
 
   return (
@@ -411,21 +419,27 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
   );
 };
 
-const ConnectWallet = ({setUserAddressFromState}) => {
+const ConnectWallet = ({ setUserAddressFromState }) => {
   const [registeredModalOpen, setRegisteredModalOpen] = useState(false);
-  
+
   const handleOpenLink = () => {
     const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  
+
     if (/android|iPad|iPhone|iPod|windows phone/i.test(userAgent)) {
       // Mobile or tablet
-      window.open("https://play.google.com/store/apps/details?id=com.app.PoLink", "_blank");
+      window.open(
+        "https://play.google.com/store/apps/details?id=com.app.PoLink",
+        "_blank"
+      );
     } else {
       // Laptop or desktop
-      window.open("https://chromewebstore.google.com/detail/polink/afeibjjgfjfphjedhdjgbgbhpomolbjm", "_blank");
+      window.open(
+        "https://chromewebstore.google.com/detail/polink/afeibjjgfjfphjedhdjgbgbhpomolbjm",
+        "_blank"
+      );
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-100 via-yellow-100 to-pink-100">
       <div className="space-y-6 w-full px-4 flex flex-col items-center">
@@ -463,5 +477,3 @@ const ConnectWallet = ({setUserAddressFromState}) => {
 };
 
 export default ConnectWallet;
-
-

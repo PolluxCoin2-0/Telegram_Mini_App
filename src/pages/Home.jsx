@@ -88,12 +88,12 @@ const Home = ({activeWalletAddressPresent}) => {
       const decryptedPrivateKey = decryptStringWithPin(privateKeyUser, pin);
 
       const PolluxWeb = new polluxWeb({
-        fullHost: "https://testnet-fullnode.poxscan.io/",
+        fullHost: "https://exchangefullnode.poxscan.io/",
         privateKey: decryptedPrivateKey,
       });
 
       const address =await PolluxWeb.contract().at(
-        "PFns6bXGCoqNsFQ156ZMjNRbP3rE9bytbX"
+        "PApFeUXaX7jjHu3RQcwvgzy1tCwt3G9Q42"
       );
       console.log({address});
       let txn ;
@@ -111,16 +111,6 @@ const Home = ({activeWalletAddressPresent}) => {
         apiData?.data?.transaction?.txID
       );
       console.log("result", transactionResult);
-
-      if (transactionResult?.data?.receipt?.result === "SUCCESS") {
-        const savedData = await saveUserMinigData(
-          walletInfo?.token,
-          apiData?.data?.transaction?.txID,
-          activeWalletAddressPresent,
-          transactionResult?.data?.receipt?.result
-        );
-        console.log("savedData", savedData);
-      }
 
       // Distribute referral rewards
       if (
@@ -140,20 +130,31 @@ const Home = ({activeWalletAddressPresent}) => {
         console.log("broadcast", broadcast2);
       }
 
-      // update token balance
+      if (transactionResult?.data?.receipt?.result === "SUCCESS") {
+        const savedData = await saveUserMinigData(
+          walletInfo?.token,
+          apiData?.data?.transaction?.txID,
+          activeWalletAddressPresent,
+          transactionResult?.data?.receipt?.result
+        );
+        console.log("savedData", savedData);
+
+        // update token balance
       const updateTokenBalance = await updateBalance(walletInfo?.token);
       console.log("updateTokenBalance", updateTokenBalance);
 
-      toast.success("Your mining has started.");
-
+      
       // save the mining data in database
       const usersavedData = await saveDataOfMiningInDatabase(
         walletInfo  ?.token,
         currentSlotNumber,
         activeWalletAddressPresent
       );
-
+      
       console.log("saveDataOfMiningInDatabase", usersavedData);
+      toast.success("Your mining has started.");
+      }
+      
     } catch (error) {
       toast.error("Mining was canceled or failed. Please try again.");
     } finally {

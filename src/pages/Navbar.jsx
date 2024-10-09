@@ -9,10 +9,6 @@ const Navbar = ({
   userAddressFromState,
   setActiveWalletAddressPresent
 }) => {
-  // const [userAddressFromState, setUserAddressFromStateInternal] = useState(() => {
-  //   const savedAddresses = sessionStorage.getItem('userAddresses');
-  //   return savedAddresses ? JSON.parse(savedAddresses) : [];
-  // });
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -67,7 +63,7 @@ const Navbar = ({
           />{" "}
           {/* Responsive logo size */}
           <span className="text-base md:text-xl text-white font-bold">
-            UVI TOKEN
+           Home
           </span>
         </div>
       </Link>
