@@ -97,7 +97,6 @@ const Home = ({activeWalletAddressPresent}) => {
       const address =await PolluxWeb.contract().at(
         "PApFeUXaX7jjHu3RQcwvgzy1tCwt3G9Q42"
       );
-      console.log({address});
       let txn ;
       try {
         txn= await address.mint().send();

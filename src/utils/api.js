@@ -60,6 +60,7 @@ export const postMintUser = async (walletAddress, token) => {
 };
 
 export const getTransactionResult = async (transactionId) => {
+  console.log({transactionId})
   try {
     const res = await axios.post(BASE_URL + `/chaintransactionById`, {
       value: transactionId,
