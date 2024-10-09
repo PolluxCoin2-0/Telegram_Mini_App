@@ -75,6 +75,8 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
       });
 
       await setCloudStorageData("userData", JSON.stringify(existingWalletData));
+      navigate("/");
+      window.location.reload();
 
       console.log("all user data", await getCloudStorageData("userData"));
       console.log(
@@ -85,8 +87,7 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
         "all user dataobj",
         JSON.parse(sessionStorage.getItem("dataObj"))
       );
-      navigate("/");
-      window.location.reload();
+      
     }
   };
 
