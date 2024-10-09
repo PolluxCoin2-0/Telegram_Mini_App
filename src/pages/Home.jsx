@@ -40,12 +40,14 @@ const Home = ({activeWalletAddressPresent}) => {
     }
 
     const votePower = await getVotePower(activeWalletAddressPresent);
-    const totalAmount =
-      votePower.data.frozenV2.reduce(
-        (sum, item) => sum + (item.amount || 0),
-        0
-      ) /
-      10 ** 6;
+    const totalAmount = (votePower.data.frozenV2 && Array.isArray(votePower.data.frozenV2)) ? 
+    votePower.data.frozenV2.reduce((sum, item) => sum + (item.amount || 0), 0) / 10 ** 6 
+    : 0;
+      // votePower.data.frozenV2.reduce(
+      //   (sum, item) => sum + (item.amount || 0),
+      //   0
+      // ) /
+      // 10 ** 6;
     if (totalAmount < 25) {
       toast.error("Insufficient stake amount !");
       return;
