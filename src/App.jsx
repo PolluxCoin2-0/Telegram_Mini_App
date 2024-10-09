@@ -30,6 +30,14 @@ const App = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Router>
+        <ToastContainer
+                position="top-right"
+                autoClose={3000}
+                theme="dark"
+                newestOnTop={true}
+                pauseOnFocusLoss
+                toastClassName="custom-toast"
+              />
           {pinEntered ? (
             <>
               <Navbar
@@ -38,14 +46,7 @@ const App = () => {
                 setUserAddressFromState={setUserAddressFromState}
                 setActiveWalletAddressPresent={setActiveWalletAddressPresent}
               />
-              <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                theme="dark"
-                newestOnTop={true}
-                pauseOnFocusLoss
-                toastClassName="custom-toast"
-              />
+              
               <Routes>
                 <Route path="/" element={<Home  activeWalletAddressPresent={activeWalletAddressPresent} />} />
                 <Route path="/buyCoin" element={<ComingSoon />} />
@@ -62,14 +63,6 @@ const App = () => {
             </>
           ) : (
             <Routes>
-               <ToastContainer
-                position="top-right"
-                autoClose={3000}
-                theme="dark"
-                newestOnTop={true}
-                pauseOnFocusLoss
-                toastClassName="custom-toast"
-              />
               <Route
                 path="/"
                 element={

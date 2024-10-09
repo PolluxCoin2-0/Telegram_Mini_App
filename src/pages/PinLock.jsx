@@ -14,7 +14,7 @@ const PinLock = ({ setPinEntered, setUserAddressPresent }) => {
     setUserAddressPresent(false);
     const encryptPin = await getCloudStorageData("encrypted");
     if (!encryptPin) {
-     toast.error("First, Generate Your Pin!");
+      toast.error("First, Generate Your Pin!");
       return;
     }
     const pin = decryptString(encryptPin);
