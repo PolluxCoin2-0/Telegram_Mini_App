@@ -23,6 +23,8 @@ const Home = ({activeWalletAddressPresent}) => {
   const handleTapMining = async () => {
     let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
 
+    console.log({walletDataStore})
+
     // Function to get wallet data by address
     const getWalletDataByAddress = (address) => {
     return walletDataStore[address]; // Return the object or null if the address doesn't exist
@@ -37,28 +39,28 @@ const Home = ({activeWalletAddressPresent}) => {
       return;
     }
 
-    // const votePower = await getVotePower(activeWalletAddressPresent);
-    // const totalAmount =
-    //   votePower.data.frozenV2.reduce(
-    //     (sum, item) => sum + (item.amount || 0),
-    //     0
-    //   ) /
-    //   10 ** 6;
-    // if (totalAmount < 25) {
-    //   toast.error("Insufficient stake amount !");
-    //   return;
-    // }
+    const votePower = await getVotePower(activeWalletAddressPresent);
+    const totalAmount =
+      votePower.data.frozenV2.reduce(
+        (sum, item) => sum + (item.amount || 0),
+        0
+      ) /
+      10 ** 6;
+    if (totalAmount < 25) {
+      toast.error("Insufficient stake amount !");
+      return;
+    }
 
     const userData = await getDataOfMiningFromDatabase(activeWalletAddressPresent);
 
-    // if (
-    //   userData?.data?.userSlotNumber === currentSlotNumber &&
-    //   userData?.data?.userSlotDate.split("T")[0] === currentDate &&
-    //   activeWalletAddressPresent === userData?.data?.walletAddress
-    // ) {
-    //   toast.error("You have already minted in this slot.");
-    //   return;
-    // }
+    if (
+      userData?.data?.userSlotNumber === currentSlotNumber &&
+      userData?.data?.userSlotDate.split("T")[0] === currentDate &&
+      activeWalletAddressPresent === userData?.data?.walletAddress
+    ) {
+      toast.error("You have already minted in this slot.");
+      return;
+    }
 
     if (isLoading) {
       return;

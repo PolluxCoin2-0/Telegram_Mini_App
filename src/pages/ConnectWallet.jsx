@@ -37,6 +37,10 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
 
       const dataObj = await postLogin(importWalletData);
       console.log("dataObj Import", dataObj?.data);
+      
+      let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
+      walletDataStore[importWalletData] = dataObj?.data;
+      sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
 
       // Store user address in sessionStorage (array form)
       let addresses = JSON.parse(sessionStorage.getItem("userAddresses")) || [];
@@ -71,9 +75,6 @@ const RegisteredModal = ({ isRegisterOpen, setRegisteredModalOpen }) => {
       });
 
       await setCloudStorageData("userData", JSON.stringify(existingWalletData));
-
-      let walletDataStore = JSON.parse(sessionStorage.getItem("dataObj")) || {};
-      walletDataStore[importWalletData] = dataObj?.data;
 
       console.log("all user data", await getCloudStorageData("userData"));
       console.log(
@@ -200,7 +201,7 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
         fullHost: "https://exchangefullnode.poxscan.io/",
         privateKey: walletData,
       });
-      
+
       const importWalletData = await PolluxWeb.address.fromPrivateKey(
         walletData
       );
@@ -292,10 +293,13 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
             JSON.parse(sessionStorage.getItem("dataObj")) || {};
           if (apiData?.data) {
             walletDataStore[importWalletData] = apiDataOfOTP?.data;
+            sessionStorage.setItem("dataObj", JSON.stringify(walletDataStore));
+
           }
 
           if (enteredReferralAddress) {
             verifyReferralfunc(
+              walletData,
               apiDataOfOTP?.data?.token,
               importWalletData,
               enteredReferralAddress
@@ -312,12 +316,17 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
     }
   };
 
-  const verifyReferralfunc = async (token, walletAddress, referredBy) => {
+  const verifyReferralfunc = async (PK, token, walletAddress, referredBy) => {
     const referralApi = await postVerifyReferral(
       token,
       walletAddress,
       referredBy
     );
+    const PolluxWeb = new polluxWeb({
+      fullHost: "https://exchangefullnode.poxscan.io/",
+      privateKey: PK,
+    });
+
 
     if (referralApi?.data?.trx1) {
       // Sign tranaction and broadcast transaction for trx2
