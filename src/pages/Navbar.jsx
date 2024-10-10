@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { Link, useNavigate } from "react-router-dom";
 import UvitokenLogo from "../assets/UvitokenLogo.png";
 import { useEffect, useState } from "react";
@@ -93,7 +94,7 @@ const Navbar = ({
 
         {/* Dropdown list */}
         {isDropdownOpen && userAddressFromState.length > 1 && (
-          <div className="absolute top-14 mt-2 right-0 bg-gray-800 border border-gray-600 rounded-md shadow-lg w-48 z-50">
+          <div className="absolute top-14 mt-2 right-0 bg-gray-800 border border-gray-600 rounded-md shadow-lg w-48 z-50 max-h-[80%] overflow-auto no-scrollbar">
             <ul className="text-white text-sm md:text-base">
               {userAddressFromState.slice(1).map((address, index) => (
                 <li
