@@ -49,16 +49,25 @@ const Modal = ({ isOpen, onClose, onImport, isRegistered }) => {
       toast.error("Please enter a valid email address!");
       return;
     }
-
     try {
       const PolluxWeb = new polluxWeb({
         fullHost: "https://exchangefullnode.poxscan.io/",
         privateKey: walletData,
       });
-
+  
       const importWalletData = await PolluxWeb.address.fromPrivateKey(
         walletData
       );
+     
+      const checkResource = await PolluxWeb.trx.getAccountResources(importWalletData);
+
+      if (checkResource && Object.keys(checkResource).length === 0) {
+        toast.error("Activate your account first!");
+        return;
+      }      
+
+      console.log({checkResource});
+      
       const apiData = await postSignup(
         importWalletData,
         email,
